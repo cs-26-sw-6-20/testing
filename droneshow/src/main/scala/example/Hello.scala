@@ -26,7 +26,15 @@ object Hello extends Greeting with App {
     val edges = new Mat()
     Canny(gray, edges, 100, 200)
     val lines = new Mat()
-    HoughLinesP(edges, lines, 1, 3.141592653589f / 180, 150, 100, 10)
+    HoughLinesP(
+      edges,
+      lines,
+      1,
+      3.141592653589f / 180,
+      5,
+      2,
+      1
+    )
 
     if (!lines.empty()) {
         
