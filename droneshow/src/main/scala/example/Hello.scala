@@ -36,6 +36,8 @@ object Hello extends Greeting with App {
       1
     )
 
+    var dronecount = 0
+
     if (!lines.empty()) {
         
       val indexer: IntIndexer = lines.createIndexer().asInstanceOf[IntIndexer]
@@ -56,6 +58,7 @@ object Hello extends Greeting with App {
         val segments = customSplitLine(l, 15, 10)
 
         segments.foreach { s =>
+          dronecount += 1
           line(
             image,
             s.p1,
@@ -69,6 +72,7 @@ object Hello extends Greeting with App {
       }
     }
 
+    putText(image, s"Drone count: $dronecount", new Point(50, 50), FONT_HERSHEY_COMPLEX, 1, new Scalar(0, 0, 255, 0))
     imshow("Scala OpenCV Hello", image)
 
     waitKey(0)
