@@ -40,17 +40,20 @@ object Hello extends Greeting with App {
         
       val indexer: IntIndexer = lines.createIndexer().asInstanceOf[IntIndexer]
 
-      for (i <- 0 until lines.rows()) {
-        //val x1 = indexer.get(i, 0, 0)
-        //val y1 = indexer.get(i, 0, 1)
-        //val x2 = indexer.get(i, 0, 2)
-        //val y2 = indexer.get(i, 0, 3)
+      val detected = collection.mutable.ArrayBuffer[Line]()
 
+      for (i <- 0 until lines.rows()) {
         val p1 = new Point(indexer.get(i, 0, 0), indexer.get(i, 0, 1))
         val p2 = new Point(indexer.get(i, 0, 2), indexer.get(i, 0, 3))
 
-        println(s"(${p1.x()},${p1.y()}) -> (${p2.x()},${p2.y()})")
-        val segments = customSplitLine(Line(p1, p2), 15, 10)
+        detected += Line(p1, p2)
+      }
+
+      val merged = mergeParallelLines(detected.toSeq)
+
+      merged.foreach { l =>
+
+        val segments = customSplitLine(l, 15, 10)
 
         segments.foreach { s =>
           line(
@@ -115,6 +118,72 @@ def customSplitLine(line: Line, maxLen: Double, gap: Double): Seq[Line] = {
 
     t = segEnd + gap
   }
+
+  result.toSeq
+}
+
+def lineAngle(l: Line): Double =
+  math.atan2(
+    l.p2.y() - l.p1.y(),
+    l.p2.x() - l.p1.x()
+  )
+
+def midpoint(l: Line): (Double, Double) =
+  (
+    (l.p1.x() + l.p2.x()) / 2.0,
+    (l.p1.y() + l.p2.y()) / 2.0
+  )
+
+def dist(a: (Double, Double), b: (Double, Double)): Double =
+  math.hypot(a._1 - b._1, a._2 - b._2)
+
+def mergeLineGroup(lines: Seq[Line]): Line = {
+
+  val pts = lines.flatMap(l => Seq(l.p1, l.p2))
+
+  val minX = pts.map(_.x()).min
+  val minY = pts.map(_.y()).min
+  val maxX = pts.map(_.x()).max
+  val maxY = pts.map(_.y()).max
+
+  Line(new Point(minX, minY), new Point(maxX, maxY))
+}
+
+def mergeParallelLines(
+  lines: Seq[Line],
+  angleThresh: Double = Math.toRadians(5),
+  distThresh: Double = 20
+): Seq[Line] = {
+
+  val used = Array.fill(lines.length)(false)
+  val result = collection.mutable.ArrayBuffer[Line]()
+
+  for i <- lines.indices do
+    if !used(i) then
+
+      val base = lines(i)
+      val baseAngle = lineAngle(base)
+      val baseMid = midpoint(base)
+
+      val group = collection.mutable.ArrayBuffer[Line](base)
+      used(i) = true
+
+      for j <- (i + 1) until lines.length do
+        if !used(j) then
+
+          val other = lines(j)
+          val a = lineAngle(other)
+          val mid = midpoint(other)
+
+          val angleDiff = math.abs(baseAngle - a)
+
+          if angleDiff < angleThresh &&
+             dist(baseMid, mid) < distThresh
+          then
+            group += other
+            used(j) = true
+
+      result += mergeLineGroup(group.toSeq)
 
   result.toSeq
 }
