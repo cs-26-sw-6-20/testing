@@ -14,14 +14,14 @@ import org.bytedeco.javacpp.indexer.IntIndexer
 object Hello extends Greeting with App {
   println(greeting)
 
-  val image = new Mat(800, 800, CV_8UC3, new Scalar(0, 0, 0, 0))
+  val camImg = new Mat(800, 800, CV_8UC3, new Scalar(0, 0, 0, 0))
   val cam = new VideoCapture(0)
 
   while true do
-    cam.read(image)
+    cam.read(camImg)
 
     val gray = new Mat()
-    cvtColor(image, gray, COLOR_BGR2GRAY)
+    cvtColor(camImg, gray, COLOR_BGR2GRAY)
 
     val edges = new Mat()
     Canny(gray, edges, 100, 200)
@@ -37,6 +37,7 @@ object Hello extends Greeting with App {
     )
 
     var dronecount = 0
+    val image = new Mat(800, 800, CV_8UC3, new Scalar(0, 0, 0, 0))
 
     if (!lines.empty()) {
         
